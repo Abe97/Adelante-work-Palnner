@@ -132,31 +132,37 @@ export interface Database {
         Row: Profile
         Insert: ProfileInsert
         Update: ProfileUpdate
+        Relationships: []
       }
       clients: {
         Row: Client
         Insert: ClientInsert
         Update: ClientUpdate
+        Relationships: []
       }
       projects: {
         Row: Project
         Insert: ProjectInsert
         Update: ProjectUpdate
+        Relationships: []
       }
       project_members: {
         Row: ProjectMember
         Insert: ProjectMemberInsert
         Update: Partial<ProjectMember>
+        Relationships: []
       }
       tasks: {
         Row: Task
         Insert: TaskInsert
         Update: TaskUpdate
+        Relationships: []
       }
       time_logs: {
         Row: TimeLog
         Insert: TimeLogInsert
         Update: TimeLogUpdate
+        Relationships: []
       }
     }
     Views: {
@@ -166,6 +172,9 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }
