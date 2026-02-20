@@ -24,7 +24,7 @@ export function MobileHeader({ profile }: MobileHeaderProps) {
           <Menu className="h-5 w-5" />
         </button>
         <div>
-          <span className="text-base font-bold text-[#E8332A]">Aedelante</span>
+          <span className="text-base font-bold text-[#E8332A]">Adelante</span>
           <span className="text-xs text-gray-500 ml-2 tracking-widest uppercase">
             Work Planner
           </span>

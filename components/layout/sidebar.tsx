@@ -13,7 +13,7 @@ export function Sidebar({ profile, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="px-6 py-6 shrink-0">
         <h1 className="text-xl font-bold">
-          <span className="text-[#E8332A]">Aedelante</span>
+          <span className="text-[#E8332A]">Adelante</span>
         </h1>
         <p className="text-xs font-medium text-gray-500 tracking-widest uppercase mt-0.5">
           Work Planner
