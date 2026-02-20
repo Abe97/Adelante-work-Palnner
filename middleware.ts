@@ -2,18 +2,20 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Guard: if env vars are not set skip auth logic entirely
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next({ request })
+    return NextResponse.next()
   }
 
   const { pathname } = request.nextUrl
-  const isPublicPath = pathname === '/login'
+  const isLoginPage = pathname === '/login'
 
-  let supabaseResponse = NextResponse.next({ request })
+  // Build a response we can attach updated cookies to
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  })
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -24,42 +26,31 @@ export async function middleware(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         )
-        supabaseResponse = NextResponse.next({ request })
+        response = NextResponse.next({
+          request: { headers: request.headers },
+        })
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
+          response.cookies.set(name, value, options)
         )
       },
     },
   })
 
-  // Use getSession() in middleware — reads from cookies, no network request.
-  // This avoids race conditions and redirect loops caused by getUser() failures.
-  // Real JWT validation happens in individual Server Components/Layouts via getUser().
-  let session = null
-  try {
-    const { data } = await supabase.auth.getSession()
-    session = data.session
-  } catch {
-    // On error just pass through — pages handle their own auth checks
-    return supabaseResponse
+  // Read session from cookies — no network request, no failures
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // 1. Not logged in → redirect to /login
+  if (!session && !isLoginPage) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Unauthenticated → redirect to /login
-  if (!session && !isPublicPath) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    redirectUrl.searchParams.set('redirectedFrom', pathname)
-    return NextResponse.redirect(redirectUrl)
+  // 2. Logged in on /login → redirect to /dashboard
+  if (session && isLoginPage) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Authenticated on /login → redirect to /dashboard
-  if (session && isPublicPath) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/dashboard'
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  return supabaseResponse
+  // 3. Everything else → pass through
+  return response
 }
 
 export const config = {
