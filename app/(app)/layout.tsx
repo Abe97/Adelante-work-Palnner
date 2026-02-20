@@ -19,32 +19,32 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
+  const { data: profileRaw } = await supabase
     .from('profiles')
     .select('full_name, email, avatar_url, role')
     .eq('id', user.id)
     .single()
 
-  if (!profile) {
-    redirect('/login')
+  // Do NOT redirect if profile is missing — it may not exist yet (trigger delay,
+  // RLS policy, first login). Use a safe fallback so the layout always renders.
+  const profile = (profileRaw as Pick<Profile, 'full_name' | 'email' | 'avatar_url' | 'role'> | null) ?? {
+    full_name: user.email?.split('@')[0] ?? 'Utente',
+    email: user.email ?? '',
+    avatar_url: null,
+    role: 'member' as const,
   }
-
-  const safeProfile = profile as Pick<
-    Profile,
-    'full_name' | 'email' | 'avatar_url' | 'role'
-  >
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F5F5F5]">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex lg:flex-col w-[280px] shrink-0 h-screen sticky top-0">
-        <Sidebar profile={safeProfile} />
+        <Sidebar profile={profile} />
       </aside>
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
-        <MobileHeader profile={safeProfile} />
+        <MobileHeader profile={profile} />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">

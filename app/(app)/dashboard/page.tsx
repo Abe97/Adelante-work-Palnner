@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Load profile
+  // Load profile — use fallback if missing (trigger delay / RLS)
   const { data: profileRaw } = await supabase
     .from('profiles')
     .select('full_name, role')
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     .single()
 
   const profile = profileRaw as { full_name: string; role: string } | null
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'utente'
+  const firstName = profile?.full_name?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'utente'
 
   // Date helpers
   const now = new Date()
@@ -37,56 +37,52 @@ export default async function DashboardPage() {
   in3Days.setDate(now.getDate() + 3)
   in3Days.setHours(23, 59, 59, 999)
 
-  // Parallel data fetching
+  const weekStartStr = weekStart.toISOString().split('T')[0]
+  const weekEndStr = weekEnd.toISOString().split('T')[0]
+  const in3DaysStr = in3Days.toISOString().split('T')[0]
+
+  // Parallel data fetching — all errors are non-fatal
   const [
-    { data: assignedTasks },
-    { data: dueSoonTasks },
+    { count: assignedCount },
+    { count: dueSoonCount },
     { data: weekTimeLogs },
     { data: urgentTasks },
     { data: activeProjects },
   ] = await Promise.all([
-    // Total assigned tasks
+    // count: 'exact' returns count in the count field, NOT data.length
     supabase
       .from('tasks')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('assigned_to', user.id)
       .neq('status', 'done'),
 
-    // Tasks due this week
     supabase
       .from('tasks')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('assigned_to', user.id)
       .neq('status', 'done')
-      .gte('due_date', weekStart.toISOString().split('T')[0])
-      .lte('due_date', weekEnd.toISOString().split('T')[0]),
+      .gte('due_date', weekStartStr)
+      .lte('due_date', weekEndStr),
 
-    // Hours logged this week
     supabase
       .from('time_logs')
       .select('hours')
       .eq('user_id', user.id)
-      .gte('logged_date', weekStart.toISOString().split('T')[0])
-      .lte('logged_date', weekEnd.toISOString().split('T')[0]),
+      .gte('logged_date', weekStartStr)
+      .lte('logged_date', weekEndStr),
 
-    // Urgent tasks: priority=urgent OR due within 3 days
     supabase
       .from('tasks')
       .select('*, project:projects(id, name)')
       .eq('assigned_to', user.id)
       .neq('status', 'done')
-      .or(`priority.eq.urgent,due_date.lte.${in3Days.toISOString().split('T')[0]}`)
+      .or(`priority.eq.urgent,due_date.lte.${in3DaysStr}`)
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(5),
 
-    // Active projects where user is member
     supabase
       .from('projects')
-      .select(`
-        *,
-        client:clients(name),
-        tasks(id, status)
-      `)
+      .select(`*, client:clients(name), tasks(id, status)`)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(6),
@@ -117,12 +113,12 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <StatCard
           label="Task assegnate"
-          value={assignedTasks?.length ?? 0}
+          value={assignedCount ?? 0}
           icon={<CheckSquare className="h-5 w-5" />}
         />
         <StatCard
           label="In scadenza questa settimana"
-          value={dueSoonTasks?.length ?? 0}
+          value={dueSoonCount ?? 0}
           icon={<AlertTriangle className="h-5 w-5" />}
         />
         <StatCard
