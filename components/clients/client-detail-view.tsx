@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Archive, ArchiveRestore, Plus } from 'lucide-react'
+import { Pencil, Archive, ArchiveRestore, Plus, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -118,8 +118,12 @@ export function ClientDetailView({ client, projects, isAdmin }: ClientDetailView
       </div>
 
       {projects.length === 0 ? (
-        <div className="text-center py-16 text-[#666666] text-sm">
-          Nessun progetto per questo cliente.
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <FolderKanban className="h-10 w-10 text-gray-200 mb-3" />
+          <p className="text-sm font-medium text-[#1A1A1A] mb-1">Nessun progetto</p>
+          <p className="text-xs text-[#666666]">
+            {isAdmin ? 'Crea un progetto associato a questo cliente' : 'Nessun progetto ancora per questo cliente'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

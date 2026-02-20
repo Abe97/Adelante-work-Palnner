@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, FolderKanban } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -109,12 +109,30 @@ export function ProjectsView({ projects, clients, isAdmin }: ProjectsViewProps) 
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-[#666666] text-sm">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <FolderKanban className="h-12 w-12 text-gray-200 mb-4" />
+          <p className="text-sm font-medium text-[#1A1A1A] mb-1">
             {search || statusFilter !== 'all' || clientFilter !== 'all'
-              ? 'Nessun progetto trovato con i filtri selezionati.'
-              : 'Nessun progetto. Creane uno nuovo!'}
+              ? 'Nessun progetto trovato'
+              : 'Ancora nessun progetto'}
           </p>
+          <p className="text-xs text-[#666666]">
+            {search || statusFilter !== 'all' || clientFilter !== 'all'
+              ? 'Prova a modificare i filtri di ricerca'
+              : isAdmin
+              ? 'Crea il tuo primo progetto per iniziare'
+              : 'I progetti assegnati a te appariranno qui'}
+          </p>
+          {!search && statusFilter === 'all' && clientFilter === 'all' && isAdmin && (
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="mt-4 bg-[#E8332A] hover:bg-[#c9271f] text-white"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Nuovo progetto
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

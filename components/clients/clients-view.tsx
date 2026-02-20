@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -96,14 +96,34 @@ export function ClientsView({ clients, isAdmin }: ClientsViewProps) {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-[#666666]">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <Building2 className="h-12 w-12 text-gray-200 mb-4" />
+          <p className="text-sm font-medium text-[#1A1A1A] mb-1">
             {search || sector !== 'all'
-              ? 'Nessun cliente trovato con i filtri selezionati.'
+              ? 'Nessun cliente trovato'
               : showArchived
-              ? 'Nessun cliente archiviato.'
-              : 'Nessun cliente. Creane uno nuovo!'}
+              ? 'Nessun cliente archiviato'
+              : 'Ancora nessun cliente'}
           </p>
+          <p className="text-xs text-[#666666]">
+            {search || sector !== 'all'
+              ? 'Prova a modificare i filtri di ricerca'
+              : showArchived
+              ? 'I clienti archiviati appariranno qui'
+              : isAdmin
+              ? 'Inizia aggiungendo il tuo primo cliente'
+              : 'I clienti aggiunti dagli admin appariranno qui'}
+          </p>
+          {!search && sector === 'all' && !showArchived && isAdmin && (
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="mt-4 bg-[#E8332A] hover:bg-[#c9271f] text-white"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Nuovo cliente
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
