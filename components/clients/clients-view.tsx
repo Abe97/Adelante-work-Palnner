@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { ClientCard } from './client-card'
 import { NewClientDialog } from './new-client-dialog'
 import { PageHeader } from '@/components/ui/page-header'
